@@ -2,6 +2,7 @@
 
 from os import environ
 import sys
+import socket
 import time
 import schedule
 import urllib.request
@@ -11,9 +12,17 @@ client = boto3.client('route53')
 
 def getPublicIP():
     print('Retrieving public IP address')
-    return urllib.request.urlopen('https://checkip.amazonaws.com').read().decode('utf-8')
+    ip = urllib.request.urlopen('https://checkip.amazonaws.com').read().decode('utf-8').rstrip()
+    print(ip)
+    return ip
 
-def updateRecord():
+def getCurrentRecord():
+    print('Retrieving current DNS record')
+    ip = socket.gethostbyname(environ['FQDN'])
+    print(ip)
+    return ip
+
+def updateRecord(ip):
     print('Making dyndns update call')
     response = client.change_resource_record_sets(
         HostedZoneId=environ['ZONEID'],
@@ -27,7 +36,7 @@ def updateRecord():
                         'TTL': 300,
                         'ResourceRecords': [
                             {
-                                'Value': getPublicIP()
+                                'Value': ip
                             },
                         ],
                     }
@@ -37,7 +46,7 @@ def updateRecord():
     )
     print('Status : ' + response['ChangeInfo']['Status'])
 
-def main():
+def testVariables():
     if ( 'ZONEID' not in environ or
          'FQDN' not in environ or
          'AWS_ACCESS_KEY_ID' not in environ or
@@ -46,11 +55,22 @@ def main():
         print('We need ZONEID, FQDN, AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.')
         sys.exit()
 
-    schedule.every().hour.do(updateRecord)
+def main():
+    testVariables()
 
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
+    publicIP  = getPublicIP()
+    curRecord = getCurrentRecord()
+
+    if curRecord == publicIP:
+        print('DNS record is up to date, no action needed')
+    else:
+        updateRecord(publicIP)
 
 main()
+
+schedule.every().hour.do(main)
+
+while True:
+    schedule.run_pending()
+    time.sleep(1)
 
