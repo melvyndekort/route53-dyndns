@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
-import os
+from os import environ
+import sys
 import time
 import schedule
 import urllib.request
@@ -15,13 +16,13 @@ def getPublicIP():
 def updateRecord():
     print('Making dyndns update call')
     response = client.change_resource_record_sets(
-        HostedZoneId=os.environ['ZONEID'],
+        HostedZoneId=environ['ZONEID'],
         ChangeBatch={
             'Changes': [
                 {
                     'Action': 'UPSERT',
                     'ResourceRecordSet': {
-                        'Name': os.environ['FQDN'],
+                        'Name': environ['FQDN'],
                         'Type': 'A',
                         'TTL': 300,
                         'ResourceRecords': [
@@ -36,8 +37,20 @@ def updateRecord():
     )
     print('Status : ' + response['ChangeInfo']['Status'])
 
-schedule.every().hour.do(updateRecord)
+def main():
+    if ( 'ZONEID' not in environ or
+         'FQDN' not in environ or
+         'AWS_ACCESS_KEY_ID' not in environ or
+         'AWS_SECRET_ACCESS_KEY' not in environ):
+        print('Not all needed environment variables were set!')
+        print('We need ZONEID, FQDN, AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.')
+        sys.exit()
 
-while True:
-    schedule.run_pending()
-    time.sleep(1)
+    schedule.every().hour.do(updateRecord)
+
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+main()
+
