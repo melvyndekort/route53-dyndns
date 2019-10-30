@@ -2,7 +2,7 @@
 
 import os
 import time
-#import schedule
+import schedule
 import urllib.request
 import boto3
 
@@ -36,9 +36,8 @@ def updateRecord():
     )
     print('Status : ' + response['ChangeInfo']['Status'])
 
-#schedule.every().hour.do(updateRecord)
+schedule.every().hour.do(updateRecord)
 
-#while True:
-#    schedule.run_pending()
-#    time.sleep(1)
-updateRecord()
+while True:
+    schedule.run_pending()
+    time.sleep(1)
