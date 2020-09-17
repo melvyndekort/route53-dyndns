@@ -3,8 +3,6 @@
 from os import environ
 import sys
 import socket
-import time
-import schedule
 import urllib.request
 import boto3
 
@@ -55,22 +53,12 @@ def testVariables():
         print('We need ZONEID, FQDN, AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.')
         sys.exit()
 
-def main():
-    testVariables()
+testVariables()
 
-    publicIP  = getPublicIP()
-    curRecord = getCurrentRecord()
+publicIP  = getPublicIP()
+curRecord = getCurrentRecord()
 
-    if curRecord == publicIP:
-        print('DNS record is up to date, no action needed')
-    else:
-        updateRecord(publicIP)
-
-main()
-
-schedule.every().hour.do(main)
-
-while True:
-    schedule.run_pending()
-    time.sleep(1)
-
+if curRecord == publicIP:
+    print('DNS record is up to date, no action needed')
+else:
+    updateRecord(publicIP)

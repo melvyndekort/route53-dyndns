@@ -1,7 +1,7 @@
-FROM python:alpine
+FROM python:3.9-rc-alpine
 
-RUN pip install --no-cache-dir schedule boto3
+RUN pip install --no-cache-dir boto3
 
-COPY job.py /
+COPY run.py /
 
-CMD ["python", "-u", "/job.py"]
+CMD ["python", "-u", "/run.py"]
