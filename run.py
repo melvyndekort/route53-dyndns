@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from os import environ
+import os
 import sys
 import socket
 import urllib.request
@@ -16,20 +16,20 @@ def getPublicIP():
 
 def getCurrentRecord():
     print('Retrieving current DNS record')
-    ip = socket.gethostbyname(environ['FQDN'])
+    ip = socket.gethostbyname(os.environ['FQDN'])
     print(ip)
     return ip
 
 def updateRecord(ip):
     print('Making dyndns update call')
     response = client.change_resource_record_sets(
-        HostedZoneId=environ['ZONEID'],
+        HostedZoneId=os.environ['AWS_HOSTED_ZONE_ID'],
         ChangeBatch={
             'Changes': [
                 {
                     'Action': 'UPSERT',
                     'ResourceRecordSet': {
-                        'Name': environ['FQDN'],
+                        'Name': os.environ['FQDN'],
                         'Type': 'A',
                         'TTL': 300,
                         'ResourceRecords': [
@@ -45,12 +45,12 @@ def updateRecord(ip):
     print('Status : ' + response['ChangeInfo']['Status'])
 
 def testVariables():
-    if ( 'ZONEID' not in environ or
-         'FQDN' not in environ or
-         'AWS_ACCESS_KEY_ID' not in environ or
-         'AWS_SECRET_ACCESS_KEY' not in environ):
+    if ( 'AWS_HOSTED_ZONE_ID' not in os.environ or
+         'FQDN' not in os.environ or
+         'AWS_ACCESS_KEY_ID' not in os.environ or
+         'AWS_SECRET_ACCESS_KEY' not in os.environ):
         print('Not all needed environment variables were set!')
-        print('We need ZONEID, FQDN, AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.')
+        print('We need AWS_HOSTED_ZONE_ID, FQDN, AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.')
         sys.exit()
 
 testVariables()
